@@ -12,6 +12,7 @@ export const addStaff = async (req:any,res:any) =>{
         const staff = await createStaff(data);
         console.log(data)
         console.log(data);
+        console.error(data)
         res.status(200).json({
             success : true,
             message : "staff created",

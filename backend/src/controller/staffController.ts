@@ -10,6 +10,7 @@ export const addStaff = async (req:any,res:any) =>{
     try {
         const data = req.body;
         const staff = await createStaff(data);
+        console.log(data)
         console.log(data);
         res.status(200).json({
             success : true,

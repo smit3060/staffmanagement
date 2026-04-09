@@ -1,5 +1,6 @@
 import express from 'express'
 import router from './src/routes/staffRoutes.ts';
+import authRouter from './src/routes/authRoutes.ts';
 import cors from "cors"
 const app = express();
 
@@ -7,6 +8,7 @@ app.use(express.json())
 app.use(cors())
 
 app.use("/api/staff",router)
+app.use("/api/auth", authRouter)
 
 app.get("/test", (req, res) => {
   res.json({ message: "Express is working" })

@@ -1,5 +1,5 @@
 import express from 'express'
-import router from './src/routes/staffRoutes.ts';
+import router from './src/mainRouter/router.ts';
 import authRouter from './src/routes/authRoutes.ts';
 import cors from "cors"
 const app = express();

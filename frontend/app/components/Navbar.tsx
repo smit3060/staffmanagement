@@ -15,7 +15,6 @@ function Navbar() {
     return (
         <nav className="w-full bg-white border-b border-gray-200 px-4 md:px-8 py-3 flex items-center justify-between shadow-sm">
 
-            {/* Logo / Brand */}
             <div
                 onClick={() => router.push('/')}
                 className="flex items-center gap-2 cursor-pointer"
@@ -31,7 +30,6 @@ function Navbar() {
                 </span>
             </div>
 
-            {/* Nav Buttons */}
             <div className="flex items-center gap-2">
                 {navItems.map(item => {
                     const isActive = pathname === item.path;

@@ -18,6 +18,14 @@ export const updateDepartment = async (id: number, name: string) => {
 };
 
 export const deleteDepartment = async (id: number) => {
+    const staffCount = await prisma.staff.count({
+        where: { department: { id } }
+    });
+ 
+    if (staffCount > 0) {
+        throw new Error(`Cannot delete: ${staffCount} staff member(s) are assigned to this department.`);
+    }
+ 
     return await prisma.department.delete({
         where: { id }
     });

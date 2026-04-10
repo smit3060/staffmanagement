@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
-
-const API_AUTH = "http://localhost:3000/api/auth";
+import { axiosIns } from "../services/api";
 
 type User = { id: number; name: string; email: string };
 
@@ -34,7 +32,7 @@ export default function LoginModal({
     setError("");
     setLoading(true);
     try {
-      const { data } = await axios.post(`${API_AUTH}/login`, { email, password });
+      const { data } = await axiosIns.post(`/api/auth/login`, { email, password });
       if (!data.success) throw new Error(data.message || "Something went wrong");
       localStorage.setItem("sh_token", data.token);
       localStorage.setItem("sh_user", JSON.stringify(data.user));

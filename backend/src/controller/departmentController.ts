@@ -7,11 +7,14 @@ import {
 
 export const getAll = async (req: any, res: any) => {
     try {
-        const department = await getAllDepartments();
+        const page = Number(req.query.page as string) || 1;
+        const limit = Number(req.query.limit as string) || 10;
+        const {department,total} = await getAllDepartments(page,limit);
         res.status(200).json({
-            success: true,
-            message: "departments fetched",
-            department
+            department,
+            total,
+            page,
+            limit
         });
     } catch (error) {
         console.error(error);

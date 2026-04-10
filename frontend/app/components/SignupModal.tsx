@@ -1,10 +1,6 @@
 "use client";
-
 import { useState } from "react";
-import axios from "axios";
-
-const API_AUTH = "http://localhost:3000/api/auth";
-
+import { axiosIns } from "../services/api";
 type User = { id: number; name: string; email: string };
 
 interface SignupModalProps {
@@ -35,7 +31,7 @@ export default function SignupModal({
     setError("");
     setLoading(true);
     try {
-      const { data } = await axios.post(`${API_AUTH}/register`, { name, email, password });
+      const { data } = await axiosIns.post(`/api/auth/register`, { name, email, password });
       if (!data.success) throw new Error(data.message || "Something went wrong");
       localStorage.setItem("sh_token", data.token);
       localStorage.setItem("sh_user", JSON.stringify(data.user));
@@ -56,7 +52,6 @@ export default function SignupModal({
     >
       <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-sm border border-gray-100">
 
-        {/* Header */}
         <div className="text-center mb-6">
           <div className="inline-flex w-14 h-14 bg-blue-100 rounded-2xl items-center justify-center mb-3">
             <svg className="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

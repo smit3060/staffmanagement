@@ -9,16 +9,11 @@ export const addStaff = async(staff:any) =>{
     }
 }
 
-export const getStaff = async (setStaff : any) =>{
+export const getStaff = async (page: number = 1, limit: number = 10) => {
     try {
-        const res = await axiosIns.get(`/api/staff/staff/`);
-        const s = res.data.staff;
-        setStaff({
-            name : s.name,
-            email : s.email,
-            department : s.swpartment?.name ?? ""
-        })
-        return res.data
+        const res = await axiosIns.get(`/api/staff/staff/?page=${page}&limit=${limit}`);
+        console.log("Raw API data:", res.data);
+        return res.data; // returns { staff, total, page, limit }
     } catch (error) {
         console.error(error);
     }

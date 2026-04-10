@@ -2,17 +2,27 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
-import { getStaff,removeStaff } from "../services/staffApi";
+import { getStaff, removeStaff } from "../services/staffApi";
 
 function StaffList() {
     const router = useRouter();
     const [list, setList] = useState<any[]>([]);
 
-    const getList = async () => {
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const [totalRecords, setTotalRecords] = useState(0);
+
+    const ITEMS_PER_PAGE = 10; 
+
+    const totalPages = Math.ceil(totalRecords / ITEMS_PER_PAGE);
+
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+
+    const getList = async (page: number = 1) => {
         try {
-            const res = await getStaff(setList);
-            console.log("getStaff response:", res);
-            setList(res.staff);
+            const res = await getStaff(page, ITEMS_PER_PAGE);
+            setList(res.staff);         
+            setTotalRecords(res.total); 
         } catch (error) {
             console.error(error);
         }
@@ -26,7 +36,7 @@ function StaffList() {
         }
     }, []);
 
-    useEffect(() => { getList(); }, []);
+    useEffect(() => { getList(currentPage); }, [currentPage]);
 
     const handleUpdate = (id: number) => {
         router.push(`/StaffForm?id=${id}`);
@@ -34,11 +44,16 @@ function StaffList() {
 
     const handleDelete = async (id: number) => {
         try {
-            await removeStaff(id)
-            getList();
+            await removeStaff(id);
+            getList(currentPage); 
         } catch (error) {
             console.error(error);
         }
+    };
+
+    const handlePageChange = (page: number) => {
+        if (page < 1 || page > totalPages) return;
+        setCurrentPage(page); 
     };
 
     return (
@@ -47,11 +62,12 @@ function StaffList() {
 
             <main className="flex-1 px-4 md:px-8 py-10">
 
-                {/* Page Header */}
                 <div className="max-w-6xl mx-auto mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800">All Staff Members</h1>
-                        <p className="text-gray-400 text-sm mt-1">{list.length} members found</p>
+                        <p className="text-gray-400 text-sm mt-1">
+                            {totalRecords} members found — Page {currentPage} of {totalPages || 1}
+                        </p>
                     </div>
                     <button
                         onClick={() => router.push('/StaffForm')}
@@ -61,10 +77,8 @@ function StaffList() {
                     </button>
                 </div>
 
-                {/* Table */}
                 <div className="max-w-6xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
-                    {/* Desktop Table */}
                     <div className="hidden sm:block overflow-x-auto">
                         <table className="w-full text-left text-sm">
                             <thead>
@@ -98,7 +112,7 @@ function StaffList() {
                                 ) : (
                                     list.map((data: any, index: number) => (
                                         <tr key={data.id} className="border-t border-gray-50 hover:bg-gray-50 transition">
-                                            <td className="px-5 py-4 text-gray-400">{index + 1}</td>
+                                            <td className="px-5 py-4 text-gray-400">{startIndex + index + 1}</td>
                                             <td className="px-5 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center font-semibold text-sm">
@@ -115,18 +129,8 @@ function StaffList() {
                                             </td>
                                             <td className="px-5 py-4">
                                                 <div className="flex gap-2 justify-center">
-                                                    <button
-                                                        onClick={() => handleUpdate(data.id)}
-                                                        className="px-3 py-1.5 text-xs bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition font-medium"
-                                                    >
-                                                        Update
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(data.id)}
-                                                        className="px-3 py-1.5 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium"
-                                                    >
-                                                        Delete
-                                                    </button>
+                                                    <button onClick={() => handleUpdate(data.id)} className="px-3 py-1.5 text-xs bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition font-medium">Update</button>
+                                                    <button onClick={() => handleDelete(data.id)} className="px-3 py-1.5 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium">Delete</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -136,12 +140,11 @@ function StaffList() {
                         </table>
                     </div>
 
-                    {/* Mobile Cards */}
                     <div className="sm:hidden divide-y divide-gray-100">
                         {list.length === 0 ? (
                             <div className="px-5 py-12 text-center text-gray-400 text-sm">No staff members yet</div>
                         ) : (
-                            list.map((data: any, index: number) => (
+                            list.map((data: any) => (
                                 <div key={data.id} className="p-4 flex items-center justify-between gap-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center font-bold text-sm shrink-0">
@@ -156,23 +159,52 @@ function StaffList() {
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-1.5 shrink-0">
-                                        <button
-                                            onClick={() => handleUpdate(data.id)}
-                                            className="px-3 py-1 text-xs bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition"
-                                        >
-                                            Update
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(data.id)}
-                                            className="px-3 py-1 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-                                        >
-                                            Delete
-                                        </button>
+                                        <button onClick={() => handleUpdate(data.id)} className="px-3 py-1 text-xs bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition">Update</button>
+                                        <button onClick={() => handleDelete(data.id)} className="px-3 py-1 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Delete</button>
                                     </div>
                                 </div>
                             ))
                         )}
                     </div>
+
+                    {totalPages > 1 && (
+                        <div className="px-5 py-4 border-t border-gray-100 flex items-center justify-between gap-4">
+                            <p className="text-sm text-gray-400">
+                                Showing {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, totalRecords)} of {totalRecords}
+                            </p>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                    className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                                >
+                                    ← Prev
+                                </button>
+
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                    <button
+                                        key={page}
+                                        onClick={() => handlePageChange(page)}
+                                        className={`px-3 py-1.5 text-xs rounded-lg border transition font-medium
+                                            ${currentPage === page
+                                                ? 'bg-blue-500 text-white border-blue-500'
+                                                : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        {page}
+                                    </button>
+                                ))}
+
+                                <button
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                    className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                                >
+                                    Next →
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </main>
         </div>

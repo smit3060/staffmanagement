@@ -9,15 +9,14 @@ export const editDepartment = async (editId: number, deptName: string) => {
     }
 };
 
-export const getDepartment = async (setDepartments:any) => {
+export const getDepartment = async(page:number=1,limit:number=10)=>{
     try {
-        const res = await axiosIns.get(`/api/staff/department/department/`);
-        setDepartments(Array.isArray(res.data.department) ? res.data.department : []);
+        const res = await axiosIns.get(`/api/staff/department/department/?page=${page}&limit=${limit}`);
         return res.data;
     } catch (error) {
         console.error(error);
     }
-};
+}
 
 export const createDepartment = async (deptName: string) => {
     try {

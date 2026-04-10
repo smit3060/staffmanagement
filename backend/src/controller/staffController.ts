@@ -14,17 +14,20 @@ export const addStaff = async (req: any, res: any) => {
         res.status(200).json({ success: true, message: "staff created", staff });
     } catch (error: any) {
         console.error(error);
-        res.status(400).json({ success: false, message: error.message }); // ✅ sends "Department not found"
+        res.status(400).json({ success: false, message: error.message });
     }
 };
 
 export const takeStaff = async(req:any,res:any) =>{
     try {
-        const staff = await getStaff()
+        const page = Number(req.query.page as string) || 1;
+        const limit = Number(req.query.limit as string) || 10;
+        const {staff,total} = await getStaff(page, limit);
         res.status(200).json({
-            success : true,
-            message : "staff taken",
-            staff
+            staff,
+            total,       
+            page,
+            limit
         })
     } catch (error) {
         console.error(error)

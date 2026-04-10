@@ -22,7 +22,11 @@ function StaffForm() {
     }, []);
 
     useEffect(() => {
-        getDepartment(setDepartments)
+        const takeDepartments = async () => {
+            const data = await getDepartment(1, 100); 
+            setDepartments(data.department);          
+        };
+        takeDepartments();
     }, []);
 
     useEffect(() => {

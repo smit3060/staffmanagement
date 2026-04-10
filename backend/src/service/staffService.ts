@@ -20,10 +20,17 @@ export const createStaff = async (data: any) => {
     });
 };
 
-export const getStaff = async () => {
-    return await prisma.staff.findMany({
-        include: { department: true }
-    });
+export const getStaff = async (page:number,limit:number) => {
+    const skip = (page-1)*limit;
+    const [staff,total] = await Promise.all([
+        prisma.staff.findMany({
+            skip,
+            take :limit,
+            include: { department: true }
+        }),
+        prisma.staff.count()
+    ])
+    return { staff, total };
 };
 
 export const getSpecificStaff = async (id: number) => {

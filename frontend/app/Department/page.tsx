@@ -2,13 +2,21 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import { useRouter } from "next/navigation";
-import { createDepartment ,getDepartment,editDepartment,deleteDepartment} from "../services/departmentApi"; 
+import { createDepartment, getDepartment, editDepartment, deleteDepartment } from "../services/departmentApi";
+
 function DepartmentPage() {
-    const router = useRouter(); 
+    const router = useRouter();
     const [list, setList] = useState<any[]>([]);
     const [showDialog, setShowDialog] = useState(false);
     const [deptName, setDeptName] = useState("");
     const [editId, setEditId] = useState<number | null>(null);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalRecords, setTotalRecords] = useState(0);
+    const ITEMS_PER_PAGE = 10;
+
+    const totalPages = Math.ceil(totalRecords / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
 
     useEffect(() => {
         const token = localStorage.getItem("sh_token");
@@ -18,16 +26,22 @@ function DepartmentPage() {
         }
     }, []);
 
-    const getList = async () => {
+    const getList = async (page: number = 1) => {
         try {
-            const data = await getDepartment(setDeptName);
+            const data = await getDepartment(page, ITEMS_PER_PAGE); 
             setList(Array.isArray(data.department) ? data.department : []);
+            setTotalRecords(data.total); 
         } catch (error) {
             console.error(error);
         }
     };
 
-    useEffect(() => { getList(); }, []);
+    useEffect(() => { getList(currentPage); }, [currentPage]);
+
+    const handlePageChange = (page: number) => {
+        if (page < 1 || page > totalPages) return;
+        setCurrentPage(page);
+    };
 
     const openAddDialog = () => {
         setEditId(null);
@@ -56,7 +70,7 @@ function DepartmentPage() {
                 await createDepartment(deptName);
             }
             closeDialog();
-            getList();
+            getList(currentPage); 
         } catch (error) {
             console.error(error);
         }
@@ -65,7 +79,7 @@ function DepartmentPage() {
     const handleDelete = async (id: number) => {
         try {
             await deleteDepartment(id);
-            getList();
+            getList(currentPage); 
         } catch (error: any) {
             alert(error?.response?.data?.message ?? "Cannot delete department — it may still have staff assigned.");
         }
@@ -79,7 +93,9 @@ function DepartmentPage() {
                 <div className="max-w-4xl mx-auto mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800">Departments</h1>
-                        <p className="text-gray-400 text-sm mt-1">{list.length} departments found</p>
+                        <p className="text-gray-400 text-sm mt-1">
+                            {totalRecords} departments found — Page {currentPage} of {totalPages || 1}
+                        </p>
                     </div>
                     <button
                         onClick={openAddDialog}
@@ -90,7 +106,6 @@ function DepartmentPage() {
                 </div>
 
                 <div className="max-w-4xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                    {/* Desktop Table */}
                     <div className="hidden sm:block overflow-x-auto">
                         <table className="w-full text-left text-sm">
                             <thead>
@@ -119,7 +134,7 @@ function DepartmentPage() {
                                 ) : (
                                     list.map((dept: any, index: number) => (
                                         <tr key={dept.id} className="border-t border-gray-50 hover:bg-gray-50 transition">
-                                            <td className="px-5 py-4 text-gray-400">{index + 1}</td>
+                                            <td className="px-5 py-4 text-gray-400">{startIndex + index + 1}</td>
                                             <td className="px-5 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-semibold text-sm">
@@ -130,12 +145,8 @@ function DepartmentPage() {
                                             </td>
                                             <td className="px-5 py-4">
                                                 <div className="flex gap-2 justify-center">
-                                                    <button onClick={() => openEditDialog(dept)} className="px-3 py-1.5 text-xs bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition font-medium">
-                                                        Update
-                                                    </button>
-                                                    <button onClick={() => handleDelete(dept.id)} className="px-3 py-1.5 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium">
-                                                        Delete
-                                                    </button>
+                                                    <button onClick={() => openEditDialog(dept)} className="px-3 py-1.5 text-xs bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition font-medium">Update</button>
+                                                    <button onClick={() => handleDelete(dept.id)} className="px-3 py-1.5 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium">Delete</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -145,7 +156,6 @@ function DepartmentPage() {
                         </table>
                     </div>
 
-                    {/* Mobile Cards */}
                     <div className="sm:hidden divide-y divide-gray-100">
                         {list.length === 0 ? (
                             <div className="px-5 py-12 text-center text-gray-400 text-sm">No departments yet</div>
@@ -158,7 +168,7 @@ function DepartmentPage() {
                                         </div>
                                         <div>
                                             <p className="font-semibold text-gray-800 text-sm">{dept.name}</p>
-                                            <p className="text-gray-400 text-xs">Department #{index + 1}</p>
+                                            <p className="text-gray-400 text-xs">Department #{startIndex + index + 1}</p>
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-1.5 shrink-0">
@@ -169,10 +179,48 @@ function DepartmentPage() {
                             ))
                         )}
                     </div>
+
+                    {totalPages > 1 && (
+                        <div className="px-5 py-4 border-t border-gray-100 flex items-center justify-between gap-4">
+                            <p className="text-sm text-gray-400">
+                                Showing {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, totalRecords)} of {totalRecords}
+                            </p>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                    className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                                >
+                                    ← Prev
+                                </button>
+
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                    <button
+                                        key={page}
+                                        onClick={() => handlePageChange(page)}
+                                        className={`px-3 py-1.5 text-xs rounded-lg border transition font-medium
+                                            ${currentPage === page
+                                                ? 'bg-blue-500 text-white border-blue-500'
+                                                : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        {page}
+                                    </button>
+                                ))}
+
+                                <button
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                    className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                                >
+                                    Next →
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </main>
 
-            {/* Dialog */}
             {showDialog && (
                 <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 px-4">
                     <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm border border-gray-100">

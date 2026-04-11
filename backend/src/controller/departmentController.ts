@@ -9,7 +9,8 @@ export const getAll = async (req: any, res: any) => {
     try {
         const page = Number(req.query.page as string) || 1;
         const limit = Number(req.query.limit as string) || 10;
-        const {department,total} = await getAllDepartments(page,limit);
+        const search = (req.query.search as string) || "";
+        const {department,total} = await getAllDepartments(page,limit,search);
         res.status(200).json({
             department,
             total,

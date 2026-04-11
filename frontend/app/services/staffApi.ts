@@ -9,11 +9,10 @@ export const addStaff = async(staff:any) =>{
     }
 }
 
-export const getStaff = async (page: number = 1, limit: number = 10) => {
+export const getStaff = async (page: number = 1, limit: number = 10, search: string = "",department: string = "") => {
     try {
-        const res = await axiosIns.get(`/api/staff/staff/?page=${page}&limit=${limit}`);
-        console.log("Raw API data:", res.data);
-        return res.data; // returns { staff, total, page, limit }
+        const res = await axiosIns.get(`/api/staff/staff/?page=${page}&limit=${limit}&search=${search}&department=${department}`);
+        return res.data;
     } catch (error) {
         console.error(error);
     }

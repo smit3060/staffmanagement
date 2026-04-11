@@ -22,7 +22,10 @@ export const takeStaff = async(req:any,res:any) =>{
     try {
         const page = Number(req.query.page as string) || 1;
         const limit = Number(req.query.limit as string) || 10;
-        const {staff,total} = await getStaff(page, limit);
+        const search = (req.query.search as string) || "";
+        const department  = (req.query.department as string) || "";
+        const {staff,total} = await getStaff(page, limit,search,department);
+
         res.status(200).json({
             staff,
             total,       

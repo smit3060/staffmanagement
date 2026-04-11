@@ -1,13 +1,22 @@
 import { prisma } from "../config/prisma.ts";
 
-export const getAllDepartments = async (page:number,limit:number) => {
+export const getAllDepartments = async (page:number,limit:number,search: string = "") => {
     const skip = (page-1)*limit;
+    const where = search
+        ? {
+            name: {
+                contains: search,
+                mode: "insensitive" as const
+            }
+          }
+        : {};
     const [department,total] = await Promise.all([
         prisma.department.findMany({
             skip,
             take:limit,
+            where
         }),
-        prisma.department.count()
+        prisma.department.count({where})
     ])
     return {department,total};
 };

@@ -1,6 +1,6 @@
 "use client";
 import { useRouter, usePathname } from "next/navigation";
-
+import Invoice from "./Invoice";
 function Navbar() {
     const router = useRouter();
     const pathname = usePathname();
@@ -10,6 +10,7 @@ function Navbar() {
         { label: "Add Staff", path: "/StaffForm", color: "blue" },
         { label: "Staff List", path: "/StaffList", color: "blue" },
         { label: "Departments", path: "/Department", color: "green" },
+        { label: "Invoice", path:"/Invoice" , color:"green"}
     ];
 
     return (

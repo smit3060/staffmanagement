@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import { getStaff, removeStaff } from "../services/staffApi";
+import { getDepartment } from "../services/departmentApi";
 
 function StaffList() {
     const router = useRouter();
     const [list, setList] = useState<any[]>([]);
-
+    const [selectedDept, setSelectedDept] = useState("");
+    const [departmentList, setDepartmentList] = useState<{id: number, name: string}[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
 
     const [totalRecords, setTotalRecords] = useState(0);
@@ -17,10 +19,19 @@ function StaffList() {
     const totalPages = Math.ceil(totalRecords / ITEMS_PER_PAGE);
 
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const [search, setSearch] = useState("");
 
-    const getList = async (page: number = 1) => {
+    useEffect(() => {
+        const takeDepts = async () => {
+            const data = await getDepartment(1, 100);
+            setDepartmentList(data.department);
+        };
+        takeDepts();
+    }, []);
+
+    const getList = async (page: number = 1,searchText: string = "",dept: string = "") => {
         try {
-            const res = await getStaff(page, ITEMS_PER_PAGE);
+            const res = await getStaff(page, ITEMS_PER_PAGE,searchText,dept);
             setList(res.staff);         
             setTotalRecords(res.total); 
         } catch (error) {
@@ -36,10 +47,28 @@ function StaffList() {
         }
     }, []);
 
-    useEffect(() => { getList(currentPage); }, [currentPage]);
+    useEffect(() => { getList(currentPage,search,selectedDept); }, [currentPage]);
 
     const handleUpdate = (id: number) => {
         router.push(`/StaffForm?id=${id}`);
+    };
+
+    const handleSearch = () =>{
+        setCurrentPage(1);
+        getList(1,search,selectedDept);
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            handleSearch();
+        }
+    };
+
+    const handleDeptChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value;
+        setSelectedDept(value);
+        setCurrentPage(1);
+        getList(1, search, value); 
     };
 
     const handleDelete = async (id: number) => {
@@ -75,6 +104,60 @@ function StaffList() {
                     >
                         + Add Staff
                     </button>
+                </div>
+
+                <div className="max-w-6xl mx-auto mb-4 flex gap-3">
+
+                    <div className="relative flex-1 flex gap-2">
+                        <div className="relative flex-1">
+                            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0" />
+                            </svg>
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Search by name..."
+                                className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
+                            />
+                            {search && (
+                                <button
+                                    onClick={() => {
+                                        setSearch("");
+                                        setCurrentPage(1);
+                                        getList(1, "", selectedDept); 
+                                    }}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    ✕
+                                </button>
+                            )}
+                        </div>
+                        
+                        <button
+                            onClick={handleSearch}
+                            className="px-5 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition shadow-sm"
+                        >
+                            Search
+                        </button>
+                    </div>
+                        
+                    <select
+                        value={selectedDept}
+                        onChange={handleDeptChange}
+                        className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm min-w-[180px]"
+                    >
+                        <option value="">All Departments</option>
+                        {departmentList.map(dept => (
+                            <option key={dept.id} value={dept.name}>
+                                {dept.name}
+                            </option>
+                        ))}
+                    </select>
+                    
                 </div>
 
                 <div className="max-w-6xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

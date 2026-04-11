@@ -9,9 +9,9 @@ export const editDepartment = async (editId: number, deptName: string) => {
     }
 };
 
-export const getDepartment = async(page:number=1,limit:number=10)=>{
+export const getDepartment = async(page:number=1,limit:number=10,search: string = "")=>{
     try {
-        const res = await axiosIns.get(`/api/staff/department/department/?page=${page}&limit=${limit}`);
+        const res = await axiosIns.get(`/api/staff/department/department/?page=${page}&limit=${limit}&search=${search}`);
         return res.data;
     } catch (error) {
         console.error(error);

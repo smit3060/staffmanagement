@@ -17,6 +17,7 @@ function DepartmentPage() {
 
     const totalPages = Math.ceil(totalRecords / ITEMS_PER_PAGE);
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const [search,setSearch] = useState("");
 
     useEffect(() => {
         const token = localStorage.getItem("sh_token");
@@ -26,9 +27,9 @@ function DepartmentPage() {
         }
     }, []);
 
-    const getList = async (page: number = 1) => {
+    const getList = async (page: number = 1,searchText: string = "") => {
         try {
-            const data = await getDepartment(page, ITEMS_PER_PAGE); 
+            const data = await getDepartment(page, ITEMS_PER_PAGE,searchText); 
             setList(Array.isArray(data.department) ? data.department : []);
             setTotalRecords(data.total); 
         } catch (error) {
@@ -36,7 +37,20 @@ function DepartmentPage() {
         }
     };
 
-    useEffect(() => { getList(currentPage); }, [currentPage]);
+    useEffect(() => { getList(currentPage,search); }, [currentPage]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearch(e.target.value);
+    };
+    const handleSearch = () => {
+        setCurrentPage(1);
+        getList(1, search);
+    };
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            handleSearch();
+        }
+    };
 
     const handlePageChange = (page: number) => {
         if (page < 1 || page > totalPages) return;
@@ -103,6 +117,48 @@ function DepartmentPage() {
                     >
                         + Add Department
                     </button>
+                </div>
+
+                <div className="max-w-4xl mx-auto mb-4">
+                    <div className="relative flex gap-2">  
+
+                        <div className="relative flex-1">  
+                            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0" />
+                            </svg>
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={handleInputChange}  
+                                onKeyDown={handleKeyDown}     
+                                placeholder="Search by name..."
+                                className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
+                            />
+                            {search && (
+                                <button
+                                    onClick={() => {
+                                        setSearch("");
+                                        setCurrentPage(1);
+                                        getList(1, "");
+                                    }}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    ✕
+                                </button>
+                            )}
+                        </div>
+                        
+                      
+                        <button
+                            onClick={handleSearch}
+                            className="px-5 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition shadow-sm"
+                        >
+                            Search
+                        </button>
+                        
+                    </div>
                 </div>
 
                 <div className="max-w-4xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
